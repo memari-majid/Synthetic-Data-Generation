@@ -342,7 +342,7 @@ blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --tes
 - Submit pull request
 
 ## GPU Resources
-This project has been allocated 3,000 GPU hours through the National Science Foundation ACCESS program. If you need GPU resources for running large-scale video generation, please contact:
+This project has been allocated 3,000 GPU hours through the National Science Foundation [ACCESS](https://access-ci.org/) program. If you need GPU resources for running large-scale video generation, please contact:
 
 **Contact:** mmemari@uvu.edu
 
