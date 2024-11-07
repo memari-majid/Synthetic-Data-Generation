@@ -147,19 +147,54 @@ generator.generate_dataset()
    ```
 
 3. **Multiple Quality Levels**
+   Generate a comprehensive dataset with all quality and variation combinations. This script:
+   - Creates 9 different subsets (3 qualities × 3 variations)
+   - Generates 20 videos per combination (180 total videos)
+   - Organizes outputs in separate folders by quality and variation
+   - Takes approximately 30-45 minutes to complete
+   
    ```bash
-   for quality in tiny small medium
+   # Create base output directory
+   mkdir -p output
+
+   # Generate all combinations of quality and variation levels
+   for quality in tiny small medium  # Resolutions: 64x64, 128x128, 160x120
    do
-       for variation in low medium high
+       for variation in low medium high  # Different levels of randomization
        do
+           echo "Generating ${quality} quality videos with ${variation} variation..."
+           
+           # Create specific output directory
+           mkdir -p "output/${quality}_${variation}"
+           
+           # Run Blender with current settings
            blender -b -P run_synfall.py -- \
                --model-dir "models/combined" \
                --output-dir "output/${quality}_${variation}" \
                --quality "$quality" \
                --num-videos 20 \
-               --variation "$variation"
+               --variation "$variation" \
+               --seed $RANDOM  # Add randomization between runs
+           
+           echo "Completed ${quality}_${variation} subset"
        done
    done
+
+   echo "Dataset generation complete. Check output/ directory for results."
+   ```
+
+   Expected directory structure after completion:
+   ```
+   output/
+   ├── tiny_low/      # 64x64 videos with low variation
+   ├── tiny_medium/   # 64x64 videos with medium variation
+   ├── tiny_high/     # 64x64 videos with high variation
+   ├── small_low/     # 128x128 videos with low variation
+   ├── small_medium/  # 128x128 videos with medium variation
+   ├── small_high/    # 128x128 videos with high variation
+   ├── medium_low/    # 160x120 videos with low variation
+   ├── medium_medium/ # 160x120 videos with medium variation
+   └── medium_high/   # 160x120 videos with high variation
    ```
 
 ## Variation Parameters
