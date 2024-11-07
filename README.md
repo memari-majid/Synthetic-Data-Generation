@@ -341,6 +341,14 @@ blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --tes
 - Create feature branch
 - Submit pull request
 
+## GPU Resources
+This project has been allocated 3,000 GPU hours through the National Science Foundation ACCESS program. If you need GPU resources for running large-scale video generation, please contact:
+
+**Contact:** mmemari@uvu.edu
+
+### About NSF ACCESS
+[ACCESS](https://access-ci.org/) (Advanced Cyberinfrastructure Coordination Ecosystem: Services & Support) is the National Science Foundation's advanced computing ecosystem that provides computing resources to support scientific research.
+
 ## License
 MIT License - See [LICENSE](LICENSE) file
 
