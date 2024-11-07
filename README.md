@@ -75,42 +75,159 @@ Generate tiny, synthetic fall detection videos using Blender and Mixamo animatio
 | small   | 128x128    | 8   | ~150KB    | Initial training |
 | medium  | 160x120    | 10  | ~300KB    | Final training |
 
+## Video Generation Options
+
+### Quality Presets
+
+| Quality | Resolution | FPS | File Size | Best For |
+|---------|------------|-----|-----------|----------|
+| tiny    | 64x64      | 5   | ~50KB     | Quick testing, prototypes |
+| small   | 128x128    | 8   | ~150KB    | Initial training |
+| medium  | 160x120    | 10  | ~300KB    | Final training |
+
+### Variation Levels
+
+| Level   | Description | Use Case |
+|---------|-------------|----------|
+| minimal | Fixed camera, no rotation, standard lighting | Testing pipeline |
+| low     | Basic variations in angle and lighting | Initial dataset |
+| medium  | Moderate variations in all parameters | Standard training |
+| high    | Maximum variation in all aspects | Robust training |
+
 ## Usage
 
-### Quick Test
+### Basic Generation
 ```bash
-# Generate a single test video
+# Generate 10 videos with medium variation
 blender -b -P run_synfall.py -- \
     --model-dir "models/combined" \
     --output-dir "output" \
-    --quality tiny
+    --quality tiny \
+    --num-videos 10 \
+    --variation medium
 ```
 
 ### Python Script
 ```python
 from synthetic_fall_generator import SyntheticFallGenerator
 
-# Initialize generator
+# Initialize generator with specific settings
 generator = SyntheticFallGenerator(
     model_dir="models/combined",
     output_dir="output",
-    quality='tiny'  # 64x64 resolution
+    quality='tiny',        # 64x64 resolution
+    num_videos=10,         # Generate 10 videos
+    variation_level='high' # Maximum variation
 )
 
 # Generate dataset
 generator.generate_dataset()
 ```
 
-### Batch Processing
+### Advanced Usage Examples
+
+1. **Quick Test (Minimal Variation)**
+   ```bash
+   blender -b -P run_synfall.py -- \
+       --model-dir "models/combined" \
+       --output-dir "output/test" \
+       --quality tiny \
+       --num-videos 5 \
+       --variation minimal
+   ```
+
+2. **Large Dataset (High Variation)**
+   ```bash
+   blender -b -P run_synfall.py -- \
+       --model-dir "models/combined" \
+       --output-dir "output/training" \
+       --quality small \
+       --num-videos 100 \
+       --variation high
+   ```
+
+3. **Multiple Quality Levels**
+   ```bash
+   for quality in tiny small medium
+   do
+       for variation in low medium high
+       do
+           blender -b -P run_synfall.py -- \
+               --model-dir "models/combined" \
+               --output-dir "output/${quality}_${variation}" \
+               --quality "$quality" \
+               --num-videos 20 \
+               --variation "$variation"
+       done
+   done
+   ```
+
+## Variation Parameters
+
+### Minimal Variation
+- Fixed front camera (height: 4m)
+- No character rotation
+- Standard lighting
+- Basic ground material
+- No additional noise
+
+### Low Variation
+- 3 rotation angles (-15°, 0°, 15°)
+- 2 camera heights (3m, 4m)
+- 2 camera angles
+- Basic lighting changes
+- Simple ground variations
+
+### Medium Variation
+- 5 rotation angles
+- 3 camera heights
+- 4 camera angles
+- Multiple lighting conditions
+- Various ground materials
+- Speed variations
+
+### High Variation
+- 7 rotation angles (-45° to 45°)
+- 5 camera heights (2m to 6m)
+- 6 camera angles
+- 5 lighting conditions
+- 4 ground materials
+- Maximum position/rotation variation
+- Full speed range
+
+## Tips for Different Use Cases
+
+### For Testing
 ```bash
-# Generate all qualities
-for quality in tiny small medium
-do
-    blender -b -P run_synfall.py -- \
-        --model-dir "models/combined" \
-        --output-dir "output/$quality" \
-        --quality "$quality"
-done
+# Generate minimal variation test set
+blender -b -P run_synfall.py -- \
+    --model-dir "models/combined" \
+    --output-dir "output/test" \
+    --quality tiny \
+    --num-videos 5 \
+    --variation minimal
+```
+
+### For Initial Training
+```bash
+# Generate medium-sized training set
+blender -b -P run_synfall.py -- \
+    --model-dir "models/combined" \
+    --output-dir "output/training" \
+    --quality small \
+    --num-videos 50 \
+    --variation medium
+```
+
+### For Production Dataset
+```bash
+# Generate large, varied dataset
+blender -b -P run_synfall.py -- \
+    --model-dir "models/combined" \
+    --output-dir "output/production" \
+    --quality medium \
+    --num-videos 200 \
+    --variation high
 ```
 
 ## Project Structure
