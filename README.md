@@ -1,6 +1,15 @@
-# Automated Fall Detection Video Generator
+# Synthetic Fall Video Generator (SynFall)
 
-This project automates the generation of fall detection videos using Blender's Python API. It creates realistic fall scenarios that can be used for training machine learning models in fall detection systems.
+A Python-based tool that leverages Blender and Mixamo to generate synthetic fall detection videos for AI training. This tool automates the creation of diverse, annotated fall scenarios using 3D animation.
+
+## Project Overview
+
+SynFall creates realistic synthetic fall videos by:
+- Automating 3D character animations in Blender
+- Generating diverse fall scenarios
+- Simulating surveillance camera perspectives
+- Creating varied lighting conditions
+- Producing training data for fall detection AI models
 
 ## Prerequisites
 
@@ -256,10 +265,33 @@ Feel free to submit issues and enhancement requests!
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+```
+MIT License
+
+Copyright (c) 2024 SynFall (Synthetic Fall Video Generator)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ## Acknowledgments
 
-- Mixamo for providing character models and animations
-- Blender Foundation for the 3D creation suite
+- [Mixamo](https://www.mixamo.com/) for providing 3D character models and animations
+- [Blender Foundation](https://www.blender.org/) for their powerful 3D creation suite
 - Community contributors for testing and feedback
+- Research community in fall detection for inspiration and guidance
