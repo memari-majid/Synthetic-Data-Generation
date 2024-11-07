@@ -1,51 +1,27 @@
-# SynFall (Synthetic Fall Video Generator)
+# SynFall - Simple Fall Video Generator
 
-A Python-based tool that leverages Blender and Mixamo to generate synthetic fall detection videos for AI training. This tool automates the creation of diverse, annotated fall scenarios using 3D animation.
-
-## Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Advanced Configuration](#advanced-configuration)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
+Generate tiny, synthetic fall detection videos using Blender and Mixamo animations. Perfect for creating training data for fall detection AI models.
 
 ## Overview
-SynFall creates realistic synthetic fall videos by:
-- Automating 3D character animations in Blender
-- Generating diverse fall scenarios
-- Simulating surveillance camera perspectives
-- Creating varied lighting conditions
-- Producing training data for fall detection AI models
 
-## Features
-- Multiple fall types (forward, backward, side, complex)
-- Customizable camera angles and positions
-- Various lighting conditions
-- Multiple quality presets
-- Batch processing capabilities
-- Realistic surveillance footage simulation
+- 🎥 Generates small-sized fall videos (64x64 to 160x120)
+- 🎭 Uses simple character animations from Mixamo
+- 📦 Optimized for minimal file size
+- 🚀 Perfect for initial ML model testing
+- 🔄 Supports batch processing
+- 🎮 Easy to use with Blender
 
 ## Prerequisites
 
+### Required Software
+- Blender 3.0+ ([Download](https://www.blender.org/download/))
+- Mixamo Account ([Sign Up](https://www.mixamo.com/))
+
 ### Hardware Requirements
-- CPU: Multi-core processor (recommended: 4+ cores)
-- RAM: 16GB minimum
-- GPU: NVIDIA/AMD GPU with 4GB+ VRAM
-- Storage: 50GB+ free disk space
-
-### Software Requirements
-1. **Blender**
-   - Version 2.80 or higher (3.0+ recommended)
-   - [Download Blender](https://www.blender.org/download/)
-
-2. **Mixamo Account**
-   - Free account at [mixamo.com](https://www.mixamo.com/)
-   - Access to character models and animations
+- Any modern CPU
+- 4GB+ RAM
+- Basic GPU (optional)
+- 1GB free disk space
 
 ## Installation
 
@@ -55,128 +31,168 @@ SynFall creates realistic synthetic fall videos by:
    cd synfall
    ```
 
-2. **Setup Project Structure**
+2. **Create Project Structure**
    ```bash
-   mkdir -p models/{characters,animations,combined}
-   mkdir -p output/{raw,processed}
+   mkdir -p models/combined output
    ```
 
 3. **Enable Blender Add-ons**
    - Open Blender
-   - Go to Edit > Preferences > Add-ons
-   - Enable "Rigify"
+   - Edit > Preferences > Add-ons
+   - Search and enable "Rigify"
 
-4. **Download Required Assets**
-   - Character Models from Mixamo:
-     * X Bot (standard male)
-     * Y Bot (standard female)
-     * Additional characters as needed
-   - Fall Animations:
-     * Forward Fall
-     * Backward Fall
-     * Side Fall
-     * Stumble Backwards
-     * Trip and Fall
-     * Drunk Fall
-     * Slip Fall
+## Preparing Animation Data
+
+1. **Download Character (from Mixamo)**
+   - Go to [Mixamo](https://www.mixamo.com/)
+   - Download "X Bot" (standard character)
+   - Format: FBX
+   - Skin: Without Skin
+
+2. **Download Fall Animations**
+   - Simple Forward Fall
+   - Simple Backward Fall
+   - Simple Side Fall
+   - Export Settings:
+     * Format: FBX
+     * FPS: 30
+     * No Skin
+     * Keyframes: Reduced
+
+3. **Organize Files**
+   ```
+   models/combined/
+   ├── forward_fall.fbx
+   ├── backward_fall.fbx
+   └── side_fall.fbx
+   ```
+
+## Video Quality Options
+
+| Quality | Resolution | FPS | File Size | Best For |
+|---------|------------|-----|-----------|----------|
+| tiny    | 64x64      | 5   | ~50KB     | Quick testing, prototypes |
+| small   | 128x128    | 8   | ~150KB    | Initial training |
+| medium  | 160x120    | 10  | ~300KB    | Final training |
 
 ## Usage
 
-### Basic Usage
-1. **Prepare Environment**
-   ```python
-   from synthetic_fall_generator import SyntheticFallGenerator
-   
-   generator = SyntheticFallGenerator(
-       model_dir="models/combined",
-       output_dir="output/raw",
-       resolution=(640, 480),
-       quality='surveillance'
-   )
-   
-   generator.generate_dataset()
-   ```
-
-2. **Command Line Usage**
-   ```bash
-   blender -b -P run_synfall.py -- \
-       --model-dir "models/combined" \
-       --output-dir "output/raw" \
-       --resolution 640 480
-   ```
-
-### Quality Presets
-```python
-QUALITY_PRESETS = {
-    'high': {
-        'resolution': (1920, 1080),
-        'fps': 60,
-        'noise': False,
-        'samples': 128
-    },
-    'surveillance': {
-        'resolution': (640, 480),
-        'fps': 15,
-        'noise': True,
-        'samples': 32
-    }
-    # Additional presets available
-}
+### Quick Test
+```bash
+# Generate a single test video
+blender -b -P run_synfall.py -- \
+    --model-dir "models/combined" \
+    --output-dir "output" \
+    --quality tiny
 ```
 
-## Advanced Configuration
-
-### Camera Settings
+### Python Script
 ```python
-def adjust_camera(self):
-    camera = bpy.data.objects["Camera"]
-    camera.location.x = random.uniform(-2, 2)
-    camera.location.y = random.uniform(-8, -6)
-    camera.location.z = random.uniform(4, 6)
+from synthetic_fall_generator import SyntheticFallGenerator
+
+# Initialize generator
+generator = SyntheticFallGenerator(
+    model_dir="models/combined",
+    output_dir="output",
+    quality='tiny'  # 64x64 resolution
+)
+
+# Generate dataset
+generator.generate_dataset()
 ```
 
-### Lighting Configuration
-```python
-def adjust_lighting(self):
-    light = bpy.data.objects["Sun"]
-    light.data.energy = random.uniform(0.5, 1.5)
-    light.data.color = (
-        random.uniform(0.95, 1.0),
-        random.uniform(0.95, 1.0),
-        random.uniform(0.95, 1.0)
-    )
+### Batch Processing
+```bash
+# Generate all qualities
+for quality in tiny small medium
+do
+    blender -b -P run_synfall.py -- \
+        --model-dir "models/combined" \
+        --output-dir "output/$quality" \
+        --quality "$quality"
+done
 ```
 
-### Performance Optimization
-1. **Rendering**
-   - Enable GPU acceleration
-   - Adjust sample counts
-   - Use appropriate resolution
+## Project Structure
+```
+synfall/
+├── models/
+│   └── combined/     # FBX files here
+├── output/           # Generated videos
+├── synthetic_fall_generator.py
+├── run_synfall.py
+└── README.md
+```
 
-2. **Batch Processing**
-   - Split into smaller batches
-   - Monitor system resources
-   - Use multiple instances
+## Optimization Tips
+
+### For Smaller Files
+- Use 'tiny' quality preset
+- Keep animations short
+- Use simple backgrounds
+- Enable maximum compression
+
+### For Faster Generation
+- Use GPU acceleration
+- Lower sample counts
+- Reduce animation frames
+- Close other applications
+
+### For Better Quality
+- Increase samples slightly
+- Add minimal noise
+- Use proper lighting
+- Keep stable camera
 
 ## Troubleshooting
 
 ### Common Issues
-1. **Import Errors**
-   - Run through Blender
-   - Check Python path
 
-2. **Rendering Problems**
-   - Verify GPU drivers
-   - Check memory usage
-   - Reduce resolution
+1. **Blender Won't Start**
+   ```bash
+   # Check Blender installation
+   blender --version
+   ```
+
+2. **Import Errors**
+   - Run through Blender only
+   - Check file paths
+   - Use absolute paths
+
+3. **Rendering Issues**
+   - Start with 'tiny' quality
+   - Check GPU settings
+   - Monitor memory usage
+
+### Error Messages
+
+- `No module named 'bpy'`: Run through Blender
+- `File not found`: Check paths
+- `Out of memory`: Lower resolution
+
+## Examples
+
+### Command Line Options
+```bash
+# Basic usage
+blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --quality tiny
+
+# Custom resolution
+blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --resolution 100 100
+
+# Test mode
+blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --test-only
+```
 
 ## Contributing
-Contributions are welcome! Please feel free to submit issues and pull requests.
+- Fork the repository
+- Create feature branch
+- Submit pull request
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - See [LICENSE](LICENSE) file
 
 ## Acknowledgments
-- [Mixamo](https://www.mixamo.com/) for 3D models and animations
-- [Blender Foundation](https://www.blender.org/) for the 3D creation suite
-- Community contributors and testers
+- Mixamo for animations
+- Blender Foundation
+- Open source community

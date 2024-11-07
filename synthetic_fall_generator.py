@@ -12,31 +12,28 @@ class SyntheticFallGenerator:
         self.resolution = resolution
         self.quality = quality
         
-        # Quality presets
+        # Updated quality presets optimized for surveillance footage
         self.QUALITY_PRESETS = {
-            'high': {
-                'resolution': (1920, 1080),
-                'fps': 60,
-                'noise': False,
-                'samples': 128
+            'tiny': {
+                'resolution': (64, 64),
+                'fps': 5,
+                'noise': True,
+                'samples': 4,
+                'compression': 'HIGHEST'
+            },
+            'small': {
+                'resolution': (128, 128),
+                'fps': 8,
+                'noise': True,
+                'samples': 8,
+                'compression': 'HIGH'
             },
             'medium': {
-                'resolution': (1280, 720),
-                'fps': 30,
-                'noise': True,
-                'samples': 64
-            },
-            'surveillance': {
-                'resolution': (640, 480),
-                'fps': 15,
-                'noise': True,
-                'samples': 32
-            },
-            'low_quality': {
-                'resolution': (320, 240),
+                'resolution': (160, 120),
                 'fps': 10,
                 'noise': True,
-                'samples': 16
+                'samples': 16,
+                'compression': 'HIGH'
             }
         }
         
@@ -134,7 +131,7 @@ class SyntheticFallGenerator:
         )
         
     def setup_render_settings(self, output_path):
-        """Configure render settings for video output"""
+        """Configure render settings optimized for low-resolution output"""
         scene = bpy.context.scene
         scene.render.image_settings.file_format = 'FFMPEG'
         scene.render.ffmpeg.format = 'MPEG4'
@@ -145,41 +142,64 @@ class SyntheticFallGenerator:
         preset = self.QUALITY_PRESETS[self.quality]
         scene.render.resolution_x, scene.render.resolution_y = preset['resolution']
         scene.render.fps = preset['fps']
-        scene.render.film_transparent = True
         
-        # Configure render quality
-        scene.render.engine = 'CYCLES'  # Use Cycles renderer
+        # Optimize render settings for low quality
+        scene.render.resolution_percentage = 100
+        scene.render.use_border = False
+        scene.render.use_compositing = True
+        scene.render.use_sequencer = False
+        
+        # Configure render engine for speed
+        scene.render.engine = 'CYCLES'
         scene.cycles.samples = preset['samples']
         scene.cycles.use_denoising = True
+        scene.cycles.preview_samples = 8
         
-        # Set video compression
-        scene.render.ffmpeg.constant_rate_factor = 'HIGH'
+        # Optimize video compression for surveillance footage
+        scene.render.ffmpeg.constant_rate_factor = preset['compression']
+        scene.render.ffmpeg.gopsize = 10
+        scene.render.ffmpeg.use_max_b_frames = False
+        scene.render.ffmpeg.minrate = 0
+        scene.render.ffmpeg.maxrate = 1000
+        scene.render.ffmpeg.buffersize = 1000
         
     def add_noise(self):
-        """Add noise to simulate real camera footage"""
+        """Enhanced noise settings for surveillance look"""
         if self.QUALITY_PRESETS[self.quality]['noise']:
             scene = bpy.context.scene
             scene.use_nodes = True
             nodes = scene.node_tree.nodes
-            
-            # Clear existing nodes
             nodes.clear()
             
             # Add and configure nodes
             render_layers = nodes.new(type="CompositorNodeRLayers")
             noise = nodes.new(type="CompositorNodeNoise")
+            blur = nodes.new(type="CompositorNodeBlur")
             mix = nodes.new(type="CompositorNodeMixRGB")
+            bright_contrast = nodes.new(type="CompositorNodeBrightContrast")
             output = nodes.new(type="CompositorNodeComposite")
             
-            # Configure noise
-            noise.inputs[1].default_value = 0.1  # Amount
-            noise.inputs[2].default_value = 1000  # Size
+            # Configure noise for surveillance look
+            noise.inputs[1].default_value = 0.15  # Amount
+            noise.inputs[2].default_value = 1500  # Size
+            
+            # Add slight blur
+            blur.size_x = 0.5
+            blur.size_y = 0.5
+            
+            # Adjust brightness and contrast
+            bright_contrast.inputs[1].default_value = -0.05  # Brightness
+            bright_contrast.inputs[2].default_value = 1.1    # Contrast
+            
+            # Configure mixing
             mix.blend_type = 'ADD'
-            mix.inputs[0].default_value = 0.05  # Factor
+            mix.inputs[0].default_value = 0.08  # Factor
             
             # Link nodes
             links = scene.node_tree.links
-            links.new(render_layers.outputs[0], mix.inputs[1])
+            links.new(render_layers.outputs[0], blur.inputs[0])
+            links.new(blur.outputs[0], bright_contrast.inputs[0])
+            links.new(bright_contrast.outputs[0], mix.inputs[1])
             links.new(noise.outputs[0], mix.inputs[2])
             links.new(mix.outputs[0], output.inputs[0])
         
