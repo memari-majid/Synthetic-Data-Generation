@@ -295,3 +295,195 @@ SOFTWARE.
 - [Blender Foundation](https://www.blender.org/) for their powerful 3D creation suite
 - Community contributors for testing and feedback
 - Research community in fall detection for inspiration and guidance
+
+## Using Python Scripts in Blender
+
+### Step-by-Step Guide
+
+1. **Prepare Your Environment**
+   ```bash
+   # Create project directory
+   mkdir synfall
+   cd synfall
+   
+   # Create required directories
+   mkdir -p models/{characters,animations,combined}
+   mkdir -p output/{raw,processed}
+   ```
+
+2. **Save Python Scripts**
+   - Save `synthetic_fall_generator.py` and `run_synfall.py` in your project directory
+   - Make sure both files are in the same directory
+
+3. **Running in Blender GUI**
+   a. Open Blender
+   b. Switch to "Scripting" workspace (top menu)
+   c. Create a new text file
+   d. Paste this code:
+   ```python
+   import sys
+   import os
+   
+   # Add your project directory to Python path
+   project_dir = "path/to/your/synfall/directory"
+   if project_dir not in sys.path:
+       sys.path.append(project_dir)
+   
+   from synthetic_fall_generator import SyntheticFallGenerator
+   
+   # Initialize generator
+   generator = SyntheticFallGenerator(
+       model_dir=os.path.join(project_dir, "models/combined"),
+       output_dir=os.path.join(project_dir, "output/raw"),
+       resolution=(640, 480),
+       quality='surveillance'
+   )
+   
+   # Generate dataset
+   generator.generate_dataset()
+   ```
+   e. Update `project_dir` with your actual project path
+   f. Click "Run Script" or press Alt+P
+
+4. **Running from Command Line**
+   ```bash
+   # Basic usage
+   blender -b -P run_synfall.py -- \
+       --model-dir "models/combined" \
+       --output-dir "output/raw" \
+       --resolution 640 480
+   
+   # With specific quality preset
+   blender -b -P run_synfall.py -- \
+       --model-dir "models/combined" \
+       --output-dir "output/surveillance" \
+       --quality surveillance
+   ```
+
+### Quality Presets Available
+
+```python
+# Available quality presets in synthetic_fall_generator.py
+QUALITY_PRESETS = {
+    'high': {
+        'resolution': (1920, 1080),
+        'fps': 60,
+        'noise': False,
+        'samples': 128
+    },
+    'medium': {
+        'resolution': (1280, 720),
+        'fps': 30,
+        'noise': True,
+        'samples': 64
+    },
+    'surveillance': {
+        'resolution': (640, 480),
+        'fps': 15,
+        'noise': True,
+        'samples': 32
+    },
+    'low_quality': {
+        'resolution': (320, 240),
+        'fps': 10,
+        'noise': True,
+        'samples': 16
+    }
+}
+```
+
+### Example Usage Scenarios
+
+1. **Generate Single Quality Dataset**
+   ```bash
+   blender -b -P run_synfall.py -- \
+       --model-dir "models/combined" \
+       --output-dir "output/surveillance" \
+       --quality surveillance
+   ```
+
+2. **Generate Multiple Quality Versions**
+   ```bash
+   # Create a shell script (generate_all.sh)
+   #!/bin/bash
+   
+   qualities=("surveillance" "low_quality" "medium" "high")
+   
+   for quality in "${qualities[@]}"
+   do
+       blender -b -P run_synfall.py -- \
+           --model-dir "models/combined" \
+           --output-dir "output/$quality" \
+           --quality "$quality"
+   done
+   ```
+   
+   Run with:
+   ```bash
+   chmod +x generate_all.sh
+   ./generate_all.sh
+   ```
+
+3. **Generate Custom Resolution**
+   ```bash
+   blender -b -P run_synfall.py -- \
+       --model-dir "models/combined" \
+       --output-dir "output/custom" \
+       --resolution 800 600
+   ```
+
+### Important Notes
+
+1. **Path Management**
+   - Use absolute paths when running from command line
+   - Keep all paths consistent with your project structure
+   - Verify file permissions
+
+2. **Memory Management**
+   - Monitor system resources during generation
+   - Use appropriate quality settings for your hardware
+   - Consider batch processing for large datasets
+
+3. **Troubleshooting Script Execution**
+   - Check Blender's console for error messages
+   - Verify Python path includes project directory
+   - Ensure all required files are in place
+
+4. **GPU Acceleration**
+   - Enable in Blender preferences if available
+   - Set appropriate device in render settings
+   - Monitor GPU memory usage
+
+### Script Modification Tips
+
+1. **Adjusting Camera Settings**
+   ```python
+   def adjust_camera(self):
+       camera = bpy.data.objects["Camera"]
+       # Modify these values for different camera positions
+       camera.location.x = random.uniform(-2, 2)
+       camera.location.y = random.uniform(-8, -6)
+       camera.location.z = random.uniform(4, 6)
+   ```
+
+2. **Customizing Lighting**
+   ```python
+   def adjust_lighting(self):
+       light = bpy.data.objects["Sun"]
+       # Adjust these values for different lighting conditions
+       light.data.energy = random.uniform(0.5, 1.5)
+       light.data.color = (
+           random.uniform(0.95, 1.0),
+           random.uniform(0.95, 1.0),
+           random.uniform(0.95, 1.0)
+       )
+   ```
+
+3. **Modifying Animation Settings**
+   ```python
+   def apply_fall_animation(self):
+       # Adjust these values for different animation lengths
+       scene = bpy.context.scene
+       scene.frame_start = 0
+       scene.frame_end = 90  # 3 seconds at 30fps
+   ```
