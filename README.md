@@ -7,12 +7,30 @@ This project automates the generation of fall detection videos using Blender's P
 1. **Blender Installation**
    - Download and install Blender from [blender.org](https://www.blender.org/download/)
    - Minimum version required: 2.80
+   - Recommended: Blender 3.0+ for better performance
 
-2. **Mixamo Account**
+2. **Mixamo Account and Models**
    - Create a free account at [mixamo.com](https://www.mixamo.com/)
-   - Download character models and fall animations in FBX format
+   - Download the following recommended fall animations:
+     * Forward Fall
+     * Backward Fall
+     * Side Fall
+     * Stumble Backwards
+     * Trip and Fall
+     * Drunk Fall
+     * Slip Fall
+   - For each animation, download with these settings:
+     * Format: FBX
+     * FPS: 30
+     * No Skin
+     * Without Character (if downloading just the animation)
 
-## Project Setup
+3. **Hardware Requirements**
+   - Recommended: 16GB RAM
+   - GPU with 4GB+ VRAM
+   - 50GB+ free disk space for rendered videos
+
+## Detailed Project Setup
 
 1. **Enable Rigify Add-on in Blender**
    - Open Blender
@@ -22,88 +40,199 @@ This project automates the generation of fall detection videos using Blender's P
    - Enable the add-on by checking the box
    - Click "Save Preferences"
 
-2. **Prepare Your Models**
-   - Create a directory for your models
-   - Download various fall animations from Mixamo
-   - Save the FBX files in your models directory
+2. **Prepare Your Models (Detailed Steps)**
+   
+   a. **Download Character Models**:
+   - Go to Mixamo
+   - Recommended base characters:
+     * X Bot (standard male character)
+     * Y Bot (standard female character)
+     * Prisoner
+     * Business Casual Man
+     * Office Lady
+   - Download each character in T-pose
+
+   b. **Download Fall Animations**:
+   - Search for each fall type
+   - Recommended settings per animation:
+     * In Place: Yes
+     * Character Facing: Forward
+     * Trim: Start from 0%
+     * Loop: None
+
+   c. **Organize Your Files**:
+   ```
+   models/
+   ├── characters/
+   │   ├── xbot.fbx
+   │   ├── ybot.fbx
+   │   └── ...
+   ├── animations/
+   │   ├── forward_fall/
+   │   ├── backward_fall/
+   │   └── ...
+   └── combined/          # After combining characters with animations
+   ```
 
 3. **Project Structure**
 ```
 fall_detection_generator/
 ├── models/                 # Store your FBX files here
+│   ├── combined/          # Character + animation combinations
+│   ├── characters/        # Base characters
+│   └── animations/        # Fall animations
 ├── output/                # Generated videos will be saved here
+│   ├── raw/              # Full quality renders
+│   └── processed/        # Compressed surveillance-style footage
 ├── fall_detection_generator.py
+├── run_generator.py
 └── README.md
 ```
 
-## Usage
+## Creating Diverse Fall Scenarios
 
-1. **Running from Blender's Text Editor**
-   ```python
-   from fall_detection_generator import FallSceneGenerator
-   
-   # Initialize the generator
-   generator = FallSceneGenerator(
-       model_dir="path/to/your/models",
-       output_dir="path/to/output",
-       resolution=(320, 240)
-   )
-   
-   # Generate the dataset
-   generator.generate_dataset()
-   ```
+### 1. Basic Fall Types to Generate
 
-2. **Running from Command Line**
+- **Forward Falls**
+  - Normal speed
+  - Slow motion
+  - With rotation
+  - With stumbling
+
+- **Backward Falls**
+  - Straight back
+  - Angular back
+  - With sitting attempt
+  - With reaching out
+
+- **Side Falls**
+  - Left side
+  - Right side
+  - With recovery attempt
+  - With twisting
+
+- **Complex Falls**
+  - Slip and fall
+  - Trip and fall
+  - Gradual collapse
+  - Sudden collapse
+
+### 2. Environment Variations
+
+Configure these in the script for variety:
+
+```python
+# Camera angles (modify adjust_camera method)
+CAMERA_POSITIONS = [
+    {'location': (0, -7, 5), 'rotation': (1.1, 0, 0)},    # Front view
+    {'location': (7, 0, 5), 'rotation': (1.1, -1.57, 0)}, # Side view
+    {'location': (5, -5, 7), 'rotation': (0.9, -0.7, 0)}, # Corner view
+]
+
+# Lighting conditions (modify adjust_lighting method)
+LIGHTING_SCENARIOS = [
+    {'energy': 1.5, 'rotation': (0, 0, 0)},      # Bright day
+    {'energy': 0.8, 'rotation': (0.2, 0, 0)},    # Evening
+    {'energy': 0.3, 'rotation': (0.4, 0, 0)},    # Night
+]
+```
+
+### 3. Video Quality Variations
+
+Generate different quality versions:
+
+```python
+QUALITY_PRESETS = {
+    'high': {
+        'resolution': (1920, 1080),
+        'fps': 60,
+        'noise': False
+    },
+    'medium': {
+        'resolution': (1280, 720),
+        'fps': 30,
+        'noise': True
+    },
+    'surveillance': {
+        'resolution': (640, 480),
+        'fps': 15,
+        'noise': True
+    },
+    'low_quality': {
+        'resolution': (320, 240),
+        'fps': 10,
+        'noise': True
+    }
+}
+```
+
+## Running the Generator
+
+1. **Basic Usage**
    ```bash
-   blender -b -P run_generator.py -- --model-dir /path/to/models --output-dir /path/to/output
+   blender -b -P run_generator.py -- --model-dir models/combined --output-dir output/raw
    ```
 
-## Customization Options
+2. **With Quality Presets**
+   ```bash
+   blender -b -P run_generator.py -- \
+       --model-dir models/combined \
+       --output-dir output/surveillance \
+       --resolution 640 480 \
+       --quality surveillance
+   ```
 
-### Resolution
-Adjust video resolution in the FallSceneGenerator initialization:
-```python
-generator = FallSceneGenerator(
-    model_dir="models",
-    output_dir="output",
-    resolution=(160, 120)  # Lower resolution for more realistic surveillance footage
-)
-```
+3. **Batch Processing**
+   ```bash
+   # Create a batch script to generate multiple variations
+   for quality in surveillance low_quality medium
+   do
+       blender -b -P run_generator.py -- \
+           --model-dir models/combined \
+           --output-dir output/$quality \
+           --quality $quality
+   done
+   ```
 
-### Camera Settings
-Modify camera positions in the `adjust_camera` method:
-```python
-def adjust_camera(self):
-    camera = bpy.data.objects["Camera"]
-    camera.location.x = random.uniform(-2, 2)  # Adjust range as needed
-    camera.location.y = random.uniform(-8, -6)
-    camera.location.z = random.uniform(4, 6)
-```
+## Tips for Realistic Surveillance Footage
 
-### Lighting Conditions
-Customize lighting in the `adjust_lighting` method:
-```python
-def adjust_lighting(self):
-    light = bpy.data.objects["Sun"]
-    light.data.energy = random.uniform(0.5, 1.5)  # Adjust range for different lighting intensities
-```
-
-## Tips for Best Results
-
-1. **Model Preparation**
-   - Download various fall animations from Mixamo
-   - Use different character models for diversity
-   - Ensure models are properly rigged
+1. **Camera Placement**
+   - Mount height: 2.5-3 meters (adjust camera.location.z)
+   - Slight downward angle (15-30 degrees)
+   - Corner placement for wider view
 
 2. **Video Quality**
-   - Lower resolution (e.g., 320x240) simulates surveillance cameras
-   - Enable noise for more realistic footage
-   - Use different camera angles for variety
+   - Use lower resolutions (320x240 to 640x480)
+   - Reduce frame rate (10-15 fps)
+   - Add noise and grain
+   - Consider motion blur
+   - Compress output files
 
-3. **Performance**
-   - Close other applications while rendering
+3. **Lighting Considerations**
+   - Simulate different times of day
+   - Add shadows and dark areas
+   - Include occasional glare
+   - Simulate fluorescent flickering
+
+4. **Scene Variations**
+   - Different floor textures
+   - Various background objects
+   - Multiple character positions
+   - Different clothing colors
+
+## Performance Optimization
+
+1. **Rendering Speed**
+   - Use GPU rendering if available
+   - Reduce sample count for faster renders
+   - Disable unnecessary features
+   - Use lower resolution for initial tests
+
+2. **Batch Processing**
+   - Split generation into smaller batches
+   - Use multiple Blender instances
    - Monitor system resources
-   - Consider batch processing for large datasets
+   - Save intermediate results
 
 ## Troubleshooting
 
@@ -128,3 +257,9 @@ Feel free to submit issues and enhancement requests!
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Mixamo for providing character models and animations
+- Blender Foundation for the 3D creation suite
+- Community contributors for testing and feedback
