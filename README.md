@@ -41,38 +41,43 @@ Generate tiny, synthetic fall detection videos using Blender and Mixamo animatio
    - Edit > Preferences > Add-ons
    - Search and enable "Rigify"
 
-## Basic Usage
+## Preparing Animation Data
 
-### Command Line Options
-```bash
-# Basic usage
-blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --quality tiny
+1. **Download Character (from Mixamo)**
+   - Go to [Mixamo](https://www.mixamo.com/)
+   - Download "X Bot" (standard character)
+   - Format: FBX
+   - Skin: Without Skin
 
-# Custom resolution
-blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --resolution 100 100
+2. **Download Fall Animations**
+   - Simple Forward Fall
+   - Simple Backward Fall
+   - Simple Side Fall
+   - Export Settings:
+     * Format: FBX
+     * FPS: 30
+     * No Skin
+     * Keyframes: Reduced
 
-# Test mode
-blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --test-only
-```
+3. **Organize Files**
+   ```
+   models/combined/
+   ├── forward_fall.fbx
+   ├── backward_fall.fbx
+   └── side_fall.fbx
+   ```
 
-### Python Script
-```python
-from synthetic_fall_generator import SyntheticFallGenerator
+## Video Quality Options
 
-generator = SyntheticFallGenerator(
-    model_dir="models/combined",
-    output_dir="output",
-    quality='tiny',        
-    num_videos=10,         
-    variation_level='high' 
-)
+| Quality | Resolution | FPS | File Size | Best For |
+|---------|------------|-----|-----------|----------|
+| tiny    | 64x64      | 5   | ~50KB     | Quick testing, prototypes |
+| small   | 128x128    | 8   | ~150KB    | Initial training |
+| medium  | 160x120    | 10  | ~300KB    | Final training |
 
-generator.generate_dataset()
-```
+## Video Generation Options
 
-## Advanced Usage
-
-### Video Quality Options
+### Quality Presets
 
 | Quality | Resolution | FPS | File Size | Best For |
 |---------|------------|-----|-----------|----------|
@@ -89,100 +94,187 @@ generator.generate_dataset()
 | medium  | Moderate variations in all parameters | Standard training |
 | high    | Maximum variation in all aspects | Robust training |
 
-## HPC and GPU Resources
+## Usage
 
-### Available Resources
-This project has been allocated 3,000 GPU hours through the National Science Foundation ACCESS program. If you need GPU resources for running large-scale video generation, please contact:
+### Basic Generation
+```bash
+# Generate 10 videos with medium variation
+blender -b -P run_synfall.py -- \
+    --model-dir "models/combined" \
+    --output-dir "output" \
+    --quality tiny \
+    --num-videos 10 \
+    --variation medium
+```
 
-**Contact:** mmemari@uvu.edu
+### Python Script
+```python
+from synthetic_fall_generator import SyntheticFallGenerator
 
-### About NSF ACCESS
-[ACCESS](https://access-ci.org/) (Advanced Cyberinfrastructure Coordination Ecosystem: Services & Support) is the National Science Foundation's advanced computing ecosystem that provides computing resources to support scientific research.
+# Initialize generator with specific settings
+generator = SyntheticFallGenerator(
+    model_dir="models/combined",
+    output_dir="output",
+    quality='tiny',        # 64x64 resolution
+    num_videos=10,         # Generate 10 videos
+    variation_level='high' # Maximum variation
+)
 
-### HPC Installation and Requirements
+# Generate dataset
+generator.generate_dataset()
+```
 
-1. **Basic Requirements**
-   - OpenGL library (usually Mesa or libGLU)
-   - Multi-process support
-   - GPU support (optional but recommended)
+### Advanced Usage Examples
 
-2. **Module Loading**
+1. **Quick Test (Minimal Variation)**
    ```bash
-   # Example module load command
-   module load Mesa/.20.2.1-GCCcore-10.2.0
-   module load blender
-   ```
-
-### HPC Job Submission
-
-1. **Basic CPU Job Script (SLURM)**
-   ```bash
-   #!/bin/bash
-   #SBATCH --job-name=synfall
-   #SBATCH --output=render.out
-   #SBATCH --error=render.err
-   #SBATCH --time=24:00:00
-   #SBATCH --nodes=1
-   #SBATCH --ntasks-per-node=20
-   #SBATCH --partition=epyc2
-   #SBATCH --mem-per-cpu=5GB
-
-   module load Mesa/.20.2.1-GCCcore-10.2.0
-   module load blender
-
    blender -b -P run_synfall.py -- \
        --model-dir "models/combined" \
-       --output-dir "output" \
-       --quality medium \
-       --num-videos 100
+       --output-dir "output/test" \
+       --quality tiny \
+       --num-videos 5 \
+       --variation minimal
    ```
 
-2. **GPU Job Script (SLURM)**
+2. **Large Dataset (High Variation)**
    ```bash
-   #!/bin/bash
-   #SBATCH --job-name=synfall_gpu
-   #SBATCH --output=render_gpu.out
-   #SBATCH --error=render_gpu.err
-   #SBATCH --time=12:00:00
-   #SBATCH --nodes=1
-   #SBATCH --gres=gpu:4
-   #SBATCH --partition=gpu
-   #SBATCH --mem=64G
-
-   module load blender
-
    blender -b -P run_synfall.py -- \
        --model-dir "models/combined" \
-       --output-dir "output" \
-       --quality high \
+       --output-dir "output/training" \
+       --quality small \
        --num-videos 100 \
        --variation high
    ```
 
-### Performance Considerations
+3. **Multiple Quality Levels**
+   Generate a comprehensive dataset with all quality and variation combinations. This script:
+   - Creates 9 different subsets (3 qualities × 3 variations)
+   - Generates 20 videos per combination (180 total videos)
+   - Organizes outputs in separate folders by quality and variation
+   - Takes approximately 30-45 minutes to complete
+   
+   ```bash
+   # Create base output directory
+   mkdir -p output
 
-1. **CPU Scaling**
-   | Number of CPU | Render Time (s) |
-   |---------------|----------------|
-   | 2             | 97            |
-   | 4             | 40            |
-   | 8             | 25            |
-   | 16            | 13            |
-   | 32            | 11            |
-   | 64            | 8             |
+   # Generate all combinations of quality and variation levels
+   for quality in tiny small medium  # Resolutions: 64x64, 128x128, 160x120
+   do
+       for variation in low medium high  # Different levels of randomization
+       do
+           echo "Generating ${quality} quality videos with ${variation} variation..."
+           
+           # Create specific output directory
+           mkdir -p "output/${quality}_${variation}"
+           
+           # Run Blender with current settings
+           blender -b -P run_synfall.py -- \
+               --model-dir "models/combined" \
+               --output-dir "output/${quality}_${variation}" \
+               --quality "$quality" \
+               --num-videos 20 \
+               --variation "$variation" \
+               --seed $RANDOM  # Add randomization between runs
+           
+           echo "Completed ${quality}_${variation} subset"
+       done
+   done
 
-2. **Important Notes**
-   - Use CYCLES render engine (EEVEE doesn't support headless rendering)
-   - For multi-node support, Blender needs to be built manually
-   - GPU support requires proper CUDA/OpenCL configuration
+   echo "Dataset generation complete. Check output/ directory for results."
+   ```
 
-### Resource Request Guidelines
+   Expected directory structure after completion:
+   ```
+   output/
+   ├── tiny_low/      # 64x64 videos with low variation
+   ├── tiny_medium/   # 64x64 videos with medium variation
+   ├── tiny_high/     # 64x64 videos with high variation
+   ├── small_low/     # 128x128 videos with low variation
+   ├── small_medium/  # 128x128 videos with medium variation
+   ├── small_high/    # 128x128 videos with high variation
+   ├── medium_low/    # 160x120 videos with low variation
+   ├── medium_medium/ # 160x120 videos with medium variation
+   └── medium_high/   # 160x120 videos with high variation
+   ```
 
-For optimal performance, request:
-- 4-8 GPUs (V100 or A100)
-- 1TB storage
-- 3-month allocation
-- 3,000 GPU hours
+## Variation Parameters
+
+### Minimal Variation
+- Fixed front camera (height: 4m)
+- No character rotation
+- Standard lighting
+- Basic ground material
+- No additional noise
+
+### Low Variation
+- 3 rotation angles (-15°, 0°, 15°)
+- 2 camera heights (3m, 4m)
+- 2 camera angles
+- Basic lighting changes
+- Simple ground variations
+
+### Medium Variation
+- 5 rotation angles
+- 3 camera heights
+- 4 camera angles
+- Multiple lighting conditions
+- Various ground materials
+- Speed variations
+
+### High Variation
+- 7 rotation angles (-45° to 45°)
+- 5 camera heights (2m to 6m)
+- 6 camera angles
+- 5 lighting conditions
+- 4 ground materials
+- Maximum position/rotation variation
+- Full speed range
+
+## Tips for Different Use Cases
+
+### For Testing
+```bash
+# Generate minimal variation test set
+blender -b -P run_synfall.py -- \
+    --model-dir "models/combined" \
+    --output-dir "output/test" \
+    --quality tiny \
+    --num-videos 5 \
+    --variation minimal
+```
+
+### For Initial Training
+```bash
+# Generate medium-sized training set
+blender -b -P run_synfall.py -- \
+    --model-dir "models/combined" \
+    --output-dir "output/training" \
+    --quality small \
+    --num-videos 50 \
+    --variation medium
+```
+
+### For Production Dataset
+```bash
+# Generate large, varied dataset
+blender -b -P run_synfall.py -- \
+    --model-dir "models/combined" \
+    --output-dir "output/production" \
+    --quality medium \
+    --num-videos 200 \
+    --variation high
+```
+
+## Project Structure
+```
+synfall/
+├── models/
+│   └── combined/     # FBX files here
+├── output/           # Generated videos
+├── synthetic_fall_generator.py
+├── run_synfall.py
+└── README.md
+```
 
 ## Optimization Tips
 
@@ -230,21 +322,32 @@ For optimal performance, request:
 - `File not found`: Check paths
 - `Out of memory`: Lower resolution
 
-## Project Structure
-```
-synfall/
-├── models/
-│   └── combined/     # FBX files here
-├── output/           # Generated videos
-├── synthetic_fall_generator.py
-├── run_synfall.py
-└── README.md
+## Examples
+
+### Command Line Options
+```bash
+# Basic usage
+blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --quality tiny
+
+# Custom resolution
+blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --resolution 100 100
+
+# Test mode
+blender -b -P run_synfall.py -- --model-dir "models" --output-dir "output" --test-only
 ```
 
 ## Contributing
 - Fork the repository
 - Create feature branch
 - Submit pull request
+
+## GPU Resources
+This project has been allocated 3,000 GPU hours through the National Science Foundation [ACCESS](https://access-ci.org/) program. If you need GPU resources for running large-scale video generation, please contact:
+
+**Contact:** mmemari@uvu.edu
+
+### About NSF ACCESS
+[ACCESS](https://access-ci.org/) (Advanced Cyberinfrastructure Coordination Ecosystem: Services & Support) is the National Science Foundation's advanced computing ecosystem that provides computing resources to support scientific research.
 
 ## License
 MIT License - See [LICENSE](LICENSE) file
@@ -253,4 +356,3 @@ MIT License - See [LICENSE](LICENSE) file
 - Mixamo for animations
 - Blender Foundation
 - Open source community
-- National Science Foundation ACCESS program
